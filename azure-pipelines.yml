@@ -1,5 +1,7 @@
 trigger:
-- main
+  branches:
+    include:
+      - main
 
 pool:
   vmImage: 'windows-latest'
@@ -7,21 +9,48 @@ pool:
 variables:
   buildConfiguration: 'Release'
 
-steps:
-- task: UseDotNet@2
-  inputs:
-    packageType: 'sdk'
-    version: '8.x' # or your .NET version
+stages:
+  - stage: Build
+    displayName: 'Build and Publish'
+    jobs:
+      - job: Build
+        displayName: 'Build and Publish Backend'
+        steps:
+          - checkout: self
 
-- script: dotnet build EduSyncBackend/EduSyncBackend.sln --configuration $(buildConfiguration)
-  displayName: 'Build the project'
+          - task: UseDotNet@2
+            displayName: 'Install .NET SDK'
+            inputs:
+              packageType: 'sdk'
+              version: '8.x' # Use your .NET version
 
-- script: dotnet publish EduSyncBackend/EduSyncBackend/EduSyncBackend.csproj -c Release -o $(Build.ArtifactStagingDirectory)
-  displayName: 'Publish the project'
+          - script: dotnet build EduSyncBackend/EduSyncBackend.sln --configuration $(buildConfiguration)
+            displayName: 'Build Solution'
 
-- task: AzureWebApp@1
-  inputs:
-    azureSubscription: 'Azure for Students'
-    appType: 'webApp'
-    appName: 'edusync-backend-abhi'
-    package: '$(Build.ArtifactStagingDirectory)'
+          - script: dotnet publish EduSyncBackend/EduSyncBackend/EduSyncBackend.csproj --configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory)
+            displayName: 'Publish Project'
+
+          - publish: $(Build.ArtifactStagingDirectory)
+            artifact: backend
+
+  - stage: Deploy
+    displayName: 'Deploy to Azure App Service'
+    dependsOn: Build
+    jobs:
+      - deployment: DeployBackend
+        displayName: 'Deploy Backend'
+        environment: 'Production'
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - download: current
+                  artifact: backend
+
+                - task: AzureWebApp@1
+                  displayName: 'Deploy to Azure App Service'
+                  inputs:
+                    azureSubscription: 'Azure for Students' # Your service connection name
+                    appType: 'webApp'
+                    appName: 'edusync-backend-abhi'      # Replace with your App Service name
+                    package: '$(Pipeline.Workspace)/backend'
