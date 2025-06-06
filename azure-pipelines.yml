@@ -1,0 +1,27 @@
+trigger:
+- main
+
+pool:
+  vmImage: 'windows-latest'
+
+variables:
+  buildConfiguration: 'Release'
+
+steps:
+- task: UseDotNet@2
+  inputs:
+    packageType: 'sdk'
+    version: '8.x' # or your .NET version
+
+- script: dotnet build EduSyncBackend/EduSyncBackend.sln --configuration $(buildConfiguration)
+  displayName: 'Build the project'
+
+- script: dotnet publish EduSyncBackend/EduSyncBackend/EduSyncBackend.csproj -c Release -o $(Build.ArtifactStagingDirectory)
+  displayName: 'Publish the project'
+
+- task: AzureWebApp@1
+  inputs:
+    azureSubscription: 'Azure for Students'
+    appType: 'webApp'
+    appName: 'edusync-backend-abhi'
+    package: '$(Build.ArtifactStagingDirectory)'
