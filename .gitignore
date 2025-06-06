@@ -1,0 +1,17 @@
+# Backend
+EduSyncBackend/EduSyncBackend/bin/
+EduSyncBackend/EduSyncBackend/wwwroot/coursemedia/
+EduSyncBackend/EduSyncBackend/appsettings.json
+EduSyncBackend/EduSyncBackend/obj/
+EduSyncBackend/.vs/
+EduSyncBackend/*.user
+EduSyncBackend/*.suo
+
+# Frontend
+eduSync-frontend/frontend/node_modules/
+eduSync-frontend/frontend/build/
+eduSync-frontend/frontend/.env
+
+# General
+.DS_Store
+*.log
