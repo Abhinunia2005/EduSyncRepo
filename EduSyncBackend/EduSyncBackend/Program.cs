@@ -87,11 +87,10 @@ namespace EduSyncBackend
                 app.UseCors("AllowFrontend");
 
             // Configure the HTTP request pipeline.
-            if (app.Environment.IsDevelopment())
-            {
+            
                 app.UseSwagger();
                 app.UseSwaggerUI();
-            }
+            
 
 
             app.UseStaticFiles(); // Enables serving files from wwwroot folder
