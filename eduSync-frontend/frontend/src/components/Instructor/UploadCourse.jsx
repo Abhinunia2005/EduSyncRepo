@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { jwtDecode } from 'jwt-decode';
 
+const apiUrl = process.env.REACT_APP_API_URL;
+
 const UploadCourse = () => {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -34,10 +36,11 @@ const UploadCourse = () => {
 
     try {
       setUploading(true);
-      const response = await fetch('https://localhost:7244/api/courses', {
+      const response = await fetch(`${apiUrl}/courses`, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`,
+          // Note: Do NOT set Content-Type when sending FormData; the browser will set it, including the boundary.
         },
         body: formData,
       });
@@ -57,7 +60,6 @@ const UploadCourse = () => {
       setUploading(false);
     }
   };
-
   return (
     <div
       style={{

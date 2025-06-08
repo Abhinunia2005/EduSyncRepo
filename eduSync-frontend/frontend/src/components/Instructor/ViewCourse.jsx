@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
 
+const apiUrl = process.env.REACT_APP_API_URL;
+
 const ViewCourse = () => {
   const [courses, setCourses] = useState([]);
   const [editingCourseId, setEditingCourseId] = useState(null);
@@ -18,7 +20,7 @@ const ViewCourse = () => {
   const fetchCourses = () => {
     if (!instructorId) return;
     axios
-      .get(`https://localhost:7244/api/courses/instructor/${instructorId}`, {
+      .get(`${apiUrl}/courses/instructor/${instructorId}`, {
         headers: { Authorization: `Bearer ${token}` }
       })
       .then(res => setCourses(res.data))
@@ -61,7 +63,7 @@ const ViewCourse = () => {
         formData.append('Media', editMedia); // Only append the current file
       }
 
-      await axios.put(`https://localhost:7244/api/courses/${editingCourseId}`, formData, {
+      await axios.put(`${apiUrl}/courses/${editingCourseId}`, formData, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
@@ -78,7 +80,7 @@ const ViewCourse = () => {
   const handleDeleteCourse = async (courseId) => {
     if (!window.confirm('Are you sure you want to delete this course?')) return;
     try {
-      await axios.delete(`https://localhost:7244/api/courses/${courseId}`, {
+      await axios.delete(`${apiUrl}/courses/${courseId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setCourses(courses.filter(c => c.id !== courseId));
@@ -86,7 +88,6 @@ const ViewCourse = () => {
       alert('Delete failed.');
     }
   };
-
   return (
     <div style={{ padding: '2rem' }}>
       <h2 style={{ color: "#232946", marginBottom: "1.5rem" }}>Your Uploaded Courses</h2>

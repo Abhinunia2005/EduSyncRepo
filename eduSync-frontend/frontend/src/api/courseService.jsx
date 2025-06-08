@@ -1,32 +1,31 @@
 import axios from 'axios';
 
-const API_URL = 'https://localhost:7244/api';
+const apiUrl = process.env.REACT_APP_API_URL;
 
 export const getAllCourses = () =>
-  axios.get(`${API_URL}/courses`);
+  axios.get(`${apiUrl}/courses`);
 
 export const enrollInCourse = (userId, courseId, token) =>
-  axios.post(`${API_URL}/enrollments`, { userId, courseId }, {
+  axios.post(`${apiUrl}/enrollments`, { userId, courseId }, {
     headers: { Authorization: `Bearer ${token}` }
   });
 
 export const getEnrolledCourses = (userId, token) =>
-  axios.get(`${API_URL}/enrollments/user/${userId}`, {
+  axios.get(`${apiUrl}/enrollments/user/${userId}`, {
     headers: { Authorization: `Bearer ${token}` }
   });
 
-  export const getInstructorCourses = (instructorId, token) =>
-  axios.get(`https://localhost:7244/api/courses/instructor/${instructorId}`, {
+export const getInstructorCourses = (instructorId, token) =>
+  axios.get(`${apiUrl}/courses/instructor/${instructorId}`, {
     headers: { Authorization: `Bearer ${token}` }
   });
 
 export const editCourse = (id, data, token) =>
-  axios.put(`https://localhost:7244/api/courses/${id}`, data, {
+  axios.put(`${apiUrl}/courses/${id}`, data, {
     headers: { Authorization: `Bearer ${token}` }
   });
 
 export const deleteCourse = (id, token) =>
-  axios.delete(`https://localhost:7244/api/courses/${id}`, {
+  axios.delete(`${apiUrl}/courses/${id}`, {
     headers: { Authorization: `Bearer ${token}` }
   });
-

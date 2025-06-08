@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import {jwtDecode} from "jwt-decode";
+import { jwtDecode } from "jwt-decode";
+
+const apiUrl = process.env.REACT_APP_API_URL;
 
 function Login() {
   const navigate = useNavigate();
@@ -20,7 +22,7 @@ function Login() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await fetch("https://localhost:7244/api/Auth/login", {
+      const response = await fetch(`${apiUrl}/Auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData)
@@ -36,7 +38,7 @@ function Login() {
 
         localStorage.setItem("userRole", userRole);
 
-    console.log(decodedToken);
+        console.log(decodedToken);
 
         alert("Login successful");
 
@@ -56,7 +58,6 @@ function Login() {
       alert("Something went wrong");
     }
   };
-
   return (
     <div className="container mt-5" style={{ maxWidth: "400px" }}>
       <h2>Login</h2>

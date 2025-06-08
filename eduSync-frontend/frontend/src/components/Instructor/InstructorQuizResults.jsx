@@ -2,18 +2,18 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
 
+const apiUrl = process.env.REACT_APP_API_URL;
+
 const InstructorQuizResults = ({ token }) => {
   const [quizzes, setQuizzes] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const instructorId = token ? jwtDecode(token).userId : null;
 
-
-  
   useEffect(() => {
     if (!instructorId) return;
     setLoading(true);
-    axios.get(`https://localhost:7244/api/instructor/${instructorId}/quizzes-with-results`, {
+    axios.get(`${apiUrl}/instructor/${instructorId}/quizzes-with-results`, {
       headers: { Authorization: `Bearer ${token}` }
     })
       .then(res => {
@@ -25,6 +25,8 @@ const InstructorQuizResults = ({ token }) => {
 
   if (loading) return <p>Loading quiz results...</p>;
   if (!loading && quizzes.length === 0) return <p>No quizzes or results found.</p>;
+
+
 
   return (
     <div>

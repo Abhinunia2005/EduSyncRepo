@@ -1,12 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 
+const apiUrl = process.env.REACT_APP_API_URL;
+
 const TakeQuiz = ({ quizId, token, studentId, onSubmit }) => {
   const [quiz, setQuiz] = useState(null);
   const [answers, setAnswers] = useState({});
 
   useEffect(() => {
-    axios.get(`https://localhost:7244/api/quizzes/${quizId}`, {
+    axios.get(`${apiUrl}/quizzes/${quizId}`, {
       headers: { Authorization: `Bearer ${token}` }
     }).then(res => setQuiz(res.data));
   }, [quizId, token]);
@@ -24,7 +26,7 @@ const TakeQuiz = ({ quizId, token, studentId, onSubmit }) => {
         answerText
       }))
     };
-    const res = await axios.post(`https://localhost:7244/api/quizzes/${quizId}/submit`, payload, {
+    const res = await axios.post(`${apiUrl}/quizzes/${quizId}/submit`, payload, {
       headers: { Authorization: `Bearer ${token}` }
     });
     alert(`Quiz submitted! Score: ${res.data.score}`);
@@ -32,7 +34,6 @@ const TakeQuiz = ({ quizId, token, studentId, onSubmit }) => {
   };
 
   if (!quiz) return <div>Loading...</div>;
-
   return (
     <form onSubmit={handleSubmit} style={{ maxWidth: 600, margin: '0 auto', background: '#f9f9f9', borderRadius: '12px', padding: '2rem', boxShadow: '0 2px 12px rgba(0,0,0,0.08)' }}>
       <h2 style={{ color: "#232946" }}>{quiz.title}</h2>

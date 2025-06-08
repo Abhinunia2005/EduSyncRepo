@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
 
+const apiUrl = process.env.REACT_APP_API_URL;
+
 const EnrolledCourses = () => {
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -16,7 +18,7 @@ const EnrolledCourses = () => {
       setLoading(false);
       return;
     }
-    axios.get(`https://localhost:7244/api/enrollments/user/${userId}`, {
+    axios.get(`${apiUrl}/enrollments/user/${userId}`, {
       headers: { Authorization: `Bearer ${token}` }
     })
       .then(res => setCourses(res.data))

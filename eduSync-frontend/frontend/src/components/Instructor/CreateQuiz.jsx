@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
 
+const apiUrl = process.env.REACT_APP_API_URL;
+
 const CreateQuiz = ({ token, onQuizCreated }) => {
   const [courses, setCourses] = useState([]);
   const [courseId, setCourseId] = useState('');
@@ -19,7 +21,7 @@ const CreateQuiz = ({ token, onQuizCreated }) => {
   useEffect(() => {
     const instructorId = token ? jwtDecode(token).userId : null;
     if (instructorId) {
-      axios.get(`https://localhost:7244/api/courses/instructor/${instructorId}`, {
+      axios.get(`${apiUrl}/courses/instructor/${instructorId}`, {
         headers: { Authorization: `Bearer ${token}` }
       })
       .then(res => setCourses(res.data));
@@ -77,7 +79,7 @@ const CreateQuiz = ({ token, onQuizCreated }) => {
       alert('Please add at least one question.');
       return;
     }
-    const res = await axios.post('https://localhost:7244/api/quizzes', {
+    const res = await axios.post(`${apiUrl}/quizzes`, {
       title,
       description,
       dueDate,
@@ -86,7 +88,7 @@ const CreateQuiz = ({ token, onQuizCreated }) => {
       headers: { Authorization: `Bearer ${token}` }
     });
     const quizId = res.data.id;
-    await axios.post(`https://localhost:7244/api/quizzes/${quizId}/questions`, questions, {
+    await axios.post(`${apiUrl}/quizzes/${quizId}/questions`, questions, {
       headers: { Authorization: `Bearer ${token}` }
     });
     alert('Quiz created successfully!');
@@ -103,7 +105,6 @@ const CreateQuiz = ({ token, onQuizCreated }) => {
     });
     if (onQuizCreated) onQuizCreated();
   };
-
   return (
     <form
       onSubmit={handleSubmit}

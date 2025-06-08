@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 
+const apiUrl = process.env.REACT_APP_API_URL;
+
 const DownloadMediaModal = ({ courseId, show, onClose }) => {
   const [mediaList, setMediaList] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -8,14 +10,13 @@ const DownloadMediaModal = ({ courseId, show, onClose }) => {
   useEffect(() => {
     if (show && courseId) {
       setLoading(true);
-      axios.get(`https://localhost:7244/api/courses/${courseId}/media`)
+      axios.get(`${apiUrl}/courses/${courseId}/media`)
         .then(res => setMediaList(res.data))
         .finally(() => setLoading(false));
     }
   }, [show, courseId]);
 
   if (!show) return null;
-
   return (
     <div style={{
       position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh',

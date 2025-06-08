@@ -3,6 +3,8 @@ import TakeQuiz from './TakeQuiz';
 import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
 
+const apiUrl = process.env.REACT_APP_API_URL;
+
 const Assessments = ({ token }) => {
   const [assessments, setAssessments] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -13,7 +15,7 @@ const Assessments = ({ token }) => {
   const fetchAssessments = () => {
     if (!studentId) return;
     setLoading(true);
-    axios.get(`https://localhost:7244/api/student/${studentId}/quizzes`, {
+    axios.get(`${apiUrl}/student/${studentId}/quizzes`, {
       headers: { Authorization: `Bearer ${token}` }
     })
       .then(res => {
@@ -43,7 +45,6 @@ const Assessments = ({ token }) => {
       />
     );
   }
-
   return (
     <div>
       <h2 style={{ color: "#232946", marginBottom: "1.5rem" }}>Quizzes & Assessments</h2>

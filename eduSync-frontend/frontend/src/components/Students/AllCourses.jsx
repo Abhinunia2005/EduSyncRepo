@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
 
+const apiUrl = process.env.REACT_APP_API_URL;
+
 const AllCourses = () => {
   const [courses, setCourses] = useState([]);
   const [enrolling, setEnrolling] = useState(null);
@@ -12,7 +14,7 @@ const AllCourses = () => {
 
   useEffect(() => {
     // Fetch all courses
-    axios.get('https://localhost:7244/api/courses')
+    axios.get(`${apiUrl}/courses`)
       .then(res => setCourses(res.data))
       .catch(err => {
         console.error('Failed to fetch courses:', err);
@@ -21,7 +23,7 @@ const AllCourses = () => {
 
     // Fetch enrolled courses for this student
     if (userId) {
-      axios.get(`https://localhost:7244/api/enrollments/user/${userId}`, {
+      axios.get(`${apiUrl}/enrollments/user/${userId}`, {
         headers: { Authorization: `Bearer ${token}` }
       })
         .then(res => {
@@ -40,7 +42,7 @@ const AllCourses = () => {
     }
     setEnrolling(courseId);
     try {
-      await axios.post('https://localhost:7244/api/enrollments',
+      await axios.post(`${apiUrl}/enrollments`,
         { userId, courseId },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -55,7 +57,6 @@ const AllCourses = () => {
     }
     setEnrolling(null);
   };
-
   return (
     <div>
       <h2 style={{ color: "#232946", marginBottom: "1.5rem" }}>All Courses</h2>

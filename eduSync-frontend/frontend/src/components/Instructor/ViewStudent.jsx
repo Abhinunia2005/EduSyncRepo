@@ -13,6 +13,8 @@ const cardStyle = {
   flex: '1 1 250px'
 };
 
+const apiUrl = process.env.REACT_APP_API_URL;
+
 const ViewStudent = () => {
   const [expandedStudentId, setExpandedStudentId] = useState(null);
   const [enrolled, setEnrolled] = useState([]);
@@ -23,7 +25,7 @@ const ViewStudent = () => {
 
   useEffect(() => {
     if (!instructorId) return;
-    axios.get(`https://localhost:7244/api/instructors/${instructorId}/students-overview`, {
+    axios.get(`${apiUrl}/instructors/${instructorId}/students-overview`, {
       headers: { Authorization: `Bearer ${token}` }
     })
       .then(res => {
@@ -39,6 +41,7 @@ const ViewStudent = () => {
   const toggleDetails = (id) => {
     setExpandedStudentId(expandedStudentId === id ? null : id);
   };
+
 
   return (
     <div>

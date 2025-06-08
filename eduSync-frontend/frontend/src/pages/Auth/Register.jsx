@@ -1,45 +1,43 @@
-import react ,{useState}from "react";
-import {Link} from 'react-router-dom';
+import React, { useState } from "react";
+import { Link } from 'react-router-dom';
 
-function Register()
-{
-    const [formData,setFormData] = useState({
-        Role:"",
-        Name:"",
-        Email:"",
-        Password:""
+const apiUrl = process.env.REACT_APP_API_URL;
+
+function Register() {
+    const [formData, setFormData] = useState({
+        Role: "",
+        Name: "",
+        Email: "",
+        Password: ""
     });
 
-const handleChange = (e) => {
-    setFormData({...formData,[e.target.name]:
-        e.target.value
-    });  
-};
+    const handleChange = (e) => {
+        setFormData({
+            ...formData,
+            [e.target.name]: e.target.value
+        });
+    };
 
-const handleSubmit = async(e) => {
-    
-e.preventDefault();
-try {
-    const response = await fetch("https://localhost:7244/api/Auth/register",{
-        method:"POST",
-        headers:{"Content-Type":"application/json"},
-        body:JSON.stringify(formData)
-});
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        try {
+            const response = await fetch(`${apiUrl}/Auth/register`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(formData)
+            });
 
-if(response.ok){
-    alert("Registration successful");
-} else{
-    alert("Registration failed")
-}
-}
-catch(error)
-{
-    console.error("Error:",error);
-    alert("something went wrong");
-}
-    
-};
-
+            if (response.ok) {
+                alert("Registration successful");
+            } else {
+                alert("Registration failed");
+            }
+        }
+        catch (error) {
+            console.error("Error:", error);
+            alert("something went wrong");
+        }
+    };
 
 
 
