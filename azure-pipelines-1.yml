@@ -7,7 +7,9 @@ pool:
   vmImage: 'ubuntu-latest'
 
 variables:
-  REACT_APP_API_URL: 'https://edusync-backend-abhi-hjeph9aze0gvhyc7.eastus2-01.azurewebsites.net/api'
+  - group: StaticWebAppSecrets
+  - name: REACT_APP_API_URL
+    value: 'https://edusync-backend-abhi-hjeph9aze0gvhyc7.eastus2-01.azurewebsites.net/api'
 
 steps:
   - checkout: self
