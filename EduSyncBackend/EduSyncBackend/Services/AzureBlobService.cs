@@ -10,8 +10,8 @@ namespace EduSyncBackend.Services
 
         public AzureBlobService(IConfiguration config)
         {
-            var connStr = config["BlobStorage__ConnectionString"];
-            var containerName = config["BlobStorage__ContainerName"];
+            var connStr = config["BlobStorage:ConnectionString"];
+            var containerName = config["BlobStorage:ContainerName"];
             _containerClient = new BlobContainerClient(connStr, containerName);
         }
 
