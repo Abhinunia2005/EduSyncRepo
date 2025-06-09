@@ -29,187 +29,224 @@ namespace EduSyncBackend.Controllers
         [HttpPost]
         public async Task<IActionResult> CreateCourse([FromForm] CourseUploadDto dto)
         {
-            var course = new Course
+            try
             {
-                Name = dto.Name,
-                Description = dto.Description,
-                InstructorId = dto.InstructorId
-            };
-            _context.Courses.Add(course);
-            await _context.SaveChangesAsync();
-
-            // Handle multiple file uploads
-            if (dto.Media != null && dto.Media.Count > 0)
-            {
-                var uploadsDir = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "coursemedia");
-                if (!Directory.Exists(uploadsDir))
-                    Directory.CreateDirectory(uploadsDir);
-
-                foreach (var file in dto.Media)
+                var course = new Course
                 {
-                    // 1. Save locally as before
-                    var fileName = $"{course.Id}_{Guid.NewGuid()}_{file.FileName}";
-                    var filePath = Path.Combine(uploadsDir, fileName);
-                    using (var stream = new FileStream(filePath, FileMode.Create))
-                    {
-                        await file.CopyToAsync(stream);
-                    }
-
-                    var localMedia = new CourseMedia
-                    {
-                        CourseId = course.Id,
-                        FilePath = $"/coursemedia/{fileName}",
-                        OriginalFileName = file.FileName
-                    };
-                    _context.CourseMedia.Add(localMedia);
-
-                    // 2. Upload to Azure Blob Storage
-                    var azureUrl = await _blobService.UploadFileAsync(file);
-
-                    var azureMedia = new CourseMedia
-                    {
-                        CourseId = course.Id,
-                        FilePath = azureUrl, // Azure Blob URL
-                        OriginalFileName = file.FileName
-                    };
-                    _context.CourseMedia.Add(azureMedia);
-                }
+                    Name = dto.Name,
+                    Description = dto.Description,
+                    InstructorId = dto.InstructorId
+                };
+                _context.Courses.Add(course);
                 await _context.SaveChangesAsync();
-            }
 
-            // Project to DTO before returning to avoid cycles
-            var courseDto = _context.Courses
-                .Where(c => c.Id == course.Id)
-                .Select(c => new CourseDto
+                // Handle multiple file uploads
+                if (dto.Media != null && dto.Media.Count > 0)
                 {
-                    Id = c.Id,
-                    Name = c.Name,
-                    Description = c.Description,
-                    InstructorId = c.InstructorId,
-                    MediaFiles = c.MediaFiles
-                        .Where(m => m.FilePath.StartsWith("https://"))
-                        .Select(m => new CourseMediaDto
-                        {
-                            Id = m.Id,
-                            FilePath = m.FilePath,
-                            OriginalFileName = m.OriginalFileName
-                        }).ToList()
-                })
-                .FirstOrDefault();
+                    var uploadsDir = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "coursemedia");
+                    if (!Directory.Exists(uploadsDir))
+                        Directory.CreateDirectory(uploadsDir);
 
-            return Ok(courseDto);
+                    foreach (var file in dto.Media)
+                    {
+                        // 1. Save locally as before
+                        var fileName = $"{course.Id}_{Guid.NewGuid()}_{file.FileName}";
+                        var filePath = Path.Combine(uploadsDir, fileName);
+                        using (var stream = new FileStream(filePath, FileMode.Create))
+                        {
+                            await file.CopyToAsync(stream);
+                        }
+
+                        var localMedia = new CourseMedia
+                        {
+                            CourseId = course.Id,
+                            FilePath = $"/coursemedia/{fileName}",
+                            OriginalFileName = file.FileName
+                        };
+                        _context.CourseMedia.Add(localMedia);
+
+                        // 2. Upload to Azure Blob Storage
+                        var azureUrl = await _blobService.UploadFileAsync(file);
+
+                        var azureMedia = new CourseMedia
+                        {
+                            CourseId = course.Id,
+                            FilePath = azureUrl, // Azure Blob URL
+                            OriginalFileName = file.FileName
+                        };
+                        _context.CourseMedia.Add(azureMedia);
+                    }
+                    await _context.SaveChangesAsync();
+                }
+
+                // Project to DTO before returning to avoid cycles
+                var courseDto = _context.Courses
+                    .Where(c => c.Id == course.Id)
+                    .Select(c => new CourseDto
+                    {
+                        Id = c.Id,
+                        Name = c.Name,
+                        Description = c.Description,
+                        InstructorId = c.InstructorId,
+                        MediaFiles = c.MediaFiles
+                            .Where(m => m.FilePath.StartsWith("https://"))
+                            .Select(m => new CourseMediaDto
+                            {
+                                Id = m.Id,
+                                FilePath = m.FilePath,
+                                OriginalFileName = m.OriginalFileName
+                            }).ToList()
+                    })
+                    .FirstOrDefault();
+
+                return Ok(courseDto);
+            }
+            catch (Exception ex)
+            {
+                // Log the exception if you have a logger
+                // _logger.LogError(ex, "Error in CreateCourse");
+                return StatusCode(500, new { error = ex.Message, details = ex.ToString() });
+            }
         }
 
         [HttpGet]
         public IActionResult GetCourses()
         {
-            var courses = _context.Courses
-                .Select(c => new CourseDto
-                {
-                    Id = c.Id,
-                    Name = c.Name,
-                    Description = c.Description,
-                    InstructorId = c.InstructorId,
-                    MediaFiles = c.MediaFiles
-                        .Where(m => m.FilePath.StartsWith("https://"))
-                        .Select(m => new CourseMediaDto
-                        {
-                            Id = m.Id,
-                            FilePath = m.FilePath,
-                            OriginalFileName = m.OriginalFileName
-                        }).ToList()
-                })
-                .ToList();
+            try
+            {
+                var courses = _context.Courses
+                    .Select(c => new CourseDto
+                    {
+                        Id = c.Id,
+                        Name = c.Name,
+                        Description = c.Description,
+                        InstructorId = c.InstructorId,
+                        MediaFiles = c.MediaFiles
+                            .Where(m => m.FilePath.StartsWith("https://"))
+                            .Select(m => new CourseMediaDto
+                            {
+                                Id = m.Id,
+                                FilePath = m.FilePath,
+                                OriginalFileName = m.OriginalFileName
+                            }).ToList()
+                    })
+                    .ToList();
 
-            return Ok(courses);
+                return Ok(courses);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = ex.Message, details = ex.ToString() });
+            }
         }
 
         [HttpGet("instructor/{instructorId}")]
         public IActionResult GetInstructorCourses(int instructorId)
         {
-            var courses = _context.Courses
-                .Where(c => c.InstructorId == instructorId)
-                .Select(c => new CourseDto
-                {
-                    Id = c.Id,
-                    Name = c.Name,
-                    Description = c.Description,
-                    InstructorId = c.InstructorId,
-                    MediaFiles = c.MediaFiles
-                        .Where(m => m.FilePath.StartsWith("https://"))
-                        .Select(m => new CourseMediaDto
-                        {
-                            Id = m.Id,
-                            FilePath = m.FilePath,
-                            OriginalFileName = m.OriginalFileName
-                        }).ToList()
-                })
-                .ToList();
+            try
+            {
+                var courses = _context.Courses
+                    .Where(c => c.InstructorId == instructorId)
+                    .Select(c => new CourseDto
+                    {
+                        Id = c.Id,
+                        Name = c.Name,
+                        Description = c.Description,
+                        InstructorId = c.InstructorId,
+                        MediaFiles = c.MediaFiles
+                            .Where(m => m.FilePath.StartsWith("https://"))
+                            .Select(m => new CourseMediaDto
+                            {
+                                Id = m.Id,
+                                FilePath = m.FilePath,
+                                OriginalFileName = m.OriginalFileName
+                            }).ToList()
+                    })
+                    .ToList();
 
-            return Ok(courses);
+                return Ok(courses);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = ex.Message, details = ex.ToString() });
+            }
         }
 
         [HttpPut("{id}")]
         public async Task<IActionResult> EditCourse(int id, [FromForm] CourseUploadDto dto)
         {
-            var course = _context.Courses.Find(id);
-            if (course == null) return NotFound();
-
-            course.Name = dto.Name;
-            course.Description = dto.Description;
-            // Optionally update InstructorId, etc.
-
-            // Handle media file upload if any
-            if (dto.Media != null && dto.Media.Count > 0)
+            try
             {
-                var uploadsDir = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "coursemedia");
-                if (!Directory.Exists(uploadsDir))
-                    Directory.CreateDirectory(uploadsDir);
+                var course = _context.Courses.Find(id);
+                if (course == null) return NotFound();
 
-                foreach (var file in dto.Media)
+                course.Name = dto.Name;
+                course.Description = dto.Description;
+                // Optionally update InstructorId, etc.
+
+                // Handle media file upload if any
+                if (dto.Media != null && dto.Media.Count > 0)
                 {
-                    // 1. Save locally as before
-                    var fileName = $"{course.Id}_{Guid.NewGuid()}_{file.FileName}";
-                    var filePath = Path.Combine(uploadsDir, fileName);
-                    using (var stream = new FileStream(filePath, FileMode.Create))
+                    var uploadsDir = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "coursemedia");
+                    if (!Directory.Exists(uploadsDir))
+                        Directory.CreateDirectory(uploadsDir);
+
+                    foreach (var file in dto.Media)
                     {
-                        await file.CopyToAsync(stream);
+                        // 1. Save locally as before
+                        var fileName = $"{course.Id}_{Guid.NewGuid()}_{file.FileName}";
+                        var filePath = Path.Combine(uploadsDir, fileName);
+                        using (var stream = new FileStream(filePath, FileMode.Create))
+                        {
+                            await file.CopyToAsync(stream);
+                        }
+
+                        var localMedia = new CourseMedia
+                        {
+                            CourseId = course.Id,
+                            FilePath = $"/coursemedia/{fileName}",
+                            OriginalFileName = file.FileName
+                        };
+                        _context.CourseMedia.Add(localMedia);
+
+                        // 2. Upload to Azure Blob Storage
+                        var azureUrl = await _blobService.UploadFileAsync(file);
+
+                        var azureMedia = new CourseMedia
+                        {
+                            CourseId = course.Id,
+                            FilePath = azureUrl, // Azure Blob URL
+                            OriginalFileName = file.FileName
+                        };
+                        _context.CourseMedia.Add(azureMedia);
                     }
-
-                    var localMedia = new CourseMedia
-                    {
-                        CourseId = course.Id,
-                        FilePath = $"/coursemedia/{fileName}",
-                        OriginalFileName = file.FileName
-                    };
-                    _context.CourseMedia.Add(localMedia);
-
-                    // 2. Upload to Azure Blob Storage
-                    var azureUrl = await _blobService.UploadFileAsync(file);
-
-                    var azureMedia = new CourseMedia
-                    {
-                        CourseId = course.Id,
-                        FilePath = azureUrl, // Azure Blob URL
-                        OriginalFileName = file.FileName
-                    };
-                    _context.CourseMedia.Add(azureMedia);
                 }
-            }
 
-            await _context.SaveChangesAsync();
-            return Ok();
+                await _context.SaveChangesAsync();
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = ex.Message, details = ex.ToString() });
+            }
         }
 
         [HttpDelete("{id}")]
         public IActionResult DeleteCourse(int id)
         {
-            var course = _context.Courses.Find(id);
-            if (course == null) return NotFound();
+            try
+            {
+                var course = _context.Courses.Find(id);
+                if (course == null) return NotFound();
 
-            _context.Courses.Remove(course);
-            _context.SaveChanges();
-            return Ok();
+                _context.Courses.Remove(course);
+                _context.SaveChanges();
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = ex.Message, details = ex.ToString() });
+            }
         }
     }
 }
