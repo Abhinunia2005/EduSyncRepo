@@ -6,6 +6,14 @@ using EduSyncBackend.DTOs;
 using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json;
+using System;
+using System.Text;
+using System.Threading.Tasks;
+
+// Add these for Event Hubs
+using Azure.Messaging.EventHubs;
+using Azure.Messaging.EventHubs.Producer;
+using Microsoft.Extensions.Configuration;
 
 namespace EduSyncBackend.Controllers
 {
@@ -14,10 +22,12 @@ namespace EduSyncBackend.Controllers
     public class QuizzesController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
+        private readonly IConfiguration _config;
 
-        public QuizzesController(ApplicationDbContext context)
+        public QuizzesController(ApplicationDbContext context, IConfiguration config)
         {
             _context = context;
+            _config = config;
         }
 
         // 1. Create Quiz
@@ -96,9 +106,39 @@ namespace EduSyncBackend.Controllers
             _context.QuizSubmissions.Add(submission);
             _context.SaveChanges();
 
+            // ---- Event Hubs integration (non-blocking) ----
+            try
+            {
+                string connectionString = _config["EventHub:ConnectionString"];
+                string eventHubName = _config["EventHub:Name"];
+
+                var eventObj = new
+                {
+                    quizId,
+                    studentId = dto.StudentId,
+                    score,
+                    submittedAt = submission.SubmittedAt,
+                    answers = dto.Answers
+                };
+                var eventBody = Encoding.UTF8.GetBytes(System.Text.Json.JsonSerializer.Serialize(eventObj));
+
+                // Fire-and-forget async sending
+                Task.Run(async () =>
+                {
+                    await using var producerClient = new EventHubProducerClient(connectionString, eventHubName);
+                    using EventDataBatch eventBatch = await producerClient.CreateBatchAsync();
+                    eventBatch.TryAdd(new EventData(eventBody));
+                    await producerClient.SendAsync(eventBatch);
+                });
+            }
+            catch (Exception ex)
+            {
+                // Optionally log: Event Hubs failure does not break quiz submission
+            }
+            // -----------------------------------------------
+
             return Ok(new { message = "Submission received!", score });
         }
-
 
         // GET: /api/courses/{courseId}/quizzes
         [HttpGet("/api/courses/{courseId}/quizzes")]
@@ -145,7 +185,6 @@ namespace EduSyncBackend.Controllers
             if (quiz == null) return NotFound();
             return Ok(quiz);
         }
-
 
         [HttpGet("/api/instructor/{instructorId}/quizzes-with-results")]
         public IActionResult GetInstructorQuizzesWithResults(int instructorId)
@@ -227,6 +266,5 @@ namespace EduSyncBackend.Controllers
 
             return Ok(results);
         }
-
     }
 }
